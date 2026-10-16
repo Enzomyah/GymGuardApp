@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /login
+Disallow: /member-dashboard
+Disallow: /member-profile
+Disallow: /explore
+Disallow: /inbox
+Disallow: /members
+
+# Allow only the public registration page to be crawled if needed
+Allow: /register
+Allow: /
