@@ -1,0 +1,31 @@
+# Expo
+.expo/
+dist/
+web-build/
+android/
+ios/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database Backups & Migration Scripts
+*.backup.json
+firebase_backup.json
+exportData.mjs
+exportRest.mjs
+importRest.mjs
+syncOldToNew.mjs
+.firebase/
+
+# Build
+*.apk
+*.aab
+*.ipa
+
+# System
+.DS_Store
+Thumbs.db
+expo-env.d.ts
