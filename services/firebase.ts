@@ -1,4 +1,4 @@
-import { 
+﻿import { 
   collection, 
   addDoc, 
   updateDoc, 
@@ -121,6 +121,33 @@ export const formatFirebaseDate = (val: any, fallback: string = "---"): string =
   if (!parsed) return fallback;
   return parsed.toLocaleDateString();
 };
+export const parseYMD = (ymdStr: string): Date => {
+  if (!ymdStr) return new Date();
+  const parts = ymdStr.split('-').map(Number);
+  if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+    return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+  }
+  return new Date(ymdStr);
+};
+
+export const formatDateToYMD = (date: Date): string => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
+};
+
+export const addMonths = (date: Date, count: number = 1): Date => {
+  const d = new Date(date);
+  const originalDay = d.getDate();
+  d.setMonth(d.getMonth() + count);
+  if (d.getDate() !== originalDay) {
+    d.setDate(0);
+  }
+  return d;
+};
+
 
 /**
  * Step 2: Approval
@@ -136,17 +163,16 @@ export const approveMemberRequest = async (requestId: string, requestData: GymRe
     let expiryDate: Date;
     let startDate: Date;
 
-    if (requestData.expiryDate) {
-      expiryDate = parseFirebaseDate(requestData.expiryDate) || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    } else {
-      expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 30);
-    }
-
     if (requestData.startDate) {
       startDate = parseFirebaseDate(requestData.startDate) || new Date();
     } else {
       startDate = new Date();
+    }
+
+    if (requestData.expiryDate) {
+      expiryDate = parseFirebaseDate(requestData.expiryDate) || addMonths(startDate, 1);
+    } else {
+      expiryDate = addMonths(startDate, 1);
     }
 
     // 3. Create Member Record
@@ -255,13 +281,11 @@ export const extendMembership = async (docId: string, currentExpiry: any, months
     let nextExpiry: Date;
     
     if (currentExpiryDate > now) {
-      // Still active: Stack the days onto their current expiration
-      nextExpiry = new Date(currentExpiryDate);
-      nextExpiry.setDate(nextExpiry.getDate() + (30 * monthsToAdd));
+      // Still active: Stack calendar months onto their current expiration
+      nextExpiry = addMonths(currentExpiryDate, monthsToAdd);
     } else {
-      // Already expired: Start a fresh 30 days from Today
-      nextExpiry = new Date(now);
-      nextExpiry.setDate(nextExpiry.getDate() + (30 * monthsToAdd));
+      // Already expired: Start fresh calendar months from Today
+      nextExpiry = addMonths(now, monthsToAdd);
     }
 
     await updateDoc(memberRef, { 

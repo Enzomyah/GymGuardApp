@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { registerNewMember, approveMemberRequest, rejectMemberRequest, GymRequest } from '@/services/firebase';
+import { registerNewMember, approveMemberRequest, rejectMemberRequest, GymRequest, addMonths, formatDateToYMD, parseYMD } from '@/services/firebase';
 import { RegisterInput } from '@/components/RegisterInput';
 import { PaymentOption } from '@/components/PaymentOption';
 
@@ -27,23 +27,21 @@ export default function RegisterScreen() {
   
   // Default start date to today
   const today = new Date();
-  const [startDate, setStartDate] = useState(today.toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(formatDateToYMD(today));
 
-  // Default expiry date to 30 days from today
-  const defaultExpiry = new Date();
-  defaultExpiry.setDate(defaultExpiry.getDate() + 30);
-  const [expiryDate, setExpiryDate] = useState(defaultExpiry.toISOString().split('T')[0]); 
+    // Default expiry date to 1 month from today
+  const defaultExpiry = addMonths(today, 1);
+  const [expiryDate, setExpiryDate] = useState(formatDateToYMD(defaultExpiry)); 
   
   const [avatar, setAvatar] = useState<string | null>(null);
   
-  // Auto-calculate expiry date (30 days from start date)
+  // Auto-calculate expiry date (1 month from start date)
   useEffect(() => {
     if (startDate) {
-      const start = new Date(startDate);
+      const start = parseYMD(startDate);
       if (!isNaN(start.getTime())) {
-        const expiry = new Date(start);
-        expiry.setDate(expiry.getDate() + 30);
-        setExpiryDate(expiry.toISOString().split('T')[0]);
+        const expiry = addMonths(start, 1);
+        setExpiryDate(formatDateToYMD(expiry));
       }
     }
   }, [startDate]);
@@ -318,7 +316,7 @@ export default function RegisterScreen() {
           </View>
           <Text style={styles.statusTitle}>Congratulations!</Text>
           <Text style={styles.statusSubtitle}>
-            Your registration has been approved. Welcome to the GymGuard community!
+            Your registration has been approved. Welcome to the Javenad Fitness Gym community!
           </Text>
           
           <View style={styles.successCard}>
@@ -374,9 +372,9 @@ export default function RegisterScreen() {
       >
         {/* Hero Section */}
         <View style={styles.hero}>
-          <Text style={styles.title}>Join the Gym</Text>
+          <Text style={styles.title}>Join Javenad Fitness Gym</Text>
           <Text style={styles.subtitle}>
-            Complete your registration to start tracking your fitness journey.
+            Complete your registration to activate your official gym membership pass.
           </Text>
         </View>
 
@@ -434,7 +432,7 @@ export default function RegisterScreen() {
             editable={false}
           />
           <Text style={{ fontSize: 10, color: '#E63946', marginTop: -15, marginLeft: 4, fontWeight: '700', marginBottom: 15 }}>
-            Auto-calculated: 30 days from your Start Date
+            Auto-calculated: 1 month from your Start Date
           </Text>
         </View>
 

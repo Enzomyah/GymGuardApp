@@ -153,7 +153,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
           <Text style={[styles.expiryText, { color: colors.textSecondary }]}>
             Expires: <Text style={[styles.expiryValue, { color: colors.text }, computedStatus === 'expiring' ? { color: '#FF9800' } : null, computedStatus === 'expired' ? { color: '#E63946' } : null]}>{expires}</Text>
           </Text>
-          <Text style={[styles.lastSeenText, { color: colors.textSecondary, opacity: 0.7 }]}>Last seen: {lastSeen}</Text>
+          <Text style={[styles.lastSeenText, { color: colors.textSecondary, opacity: 0.7 }]}>Registered: {lastSeen}</Text>
         </View>
       </View>
     </TouchableOpacity>

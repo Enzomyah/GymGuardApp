@@ -503,7 +503,7 @@ export default function MembersScreen() {
             status={member.status as any} 
             expires={formatFirebaseDate(member.expiryDate, "---")} 
             rawExpiry={member.expiryDate}
-            lastSeen={formatFirebaseDate(member.lastSeen, "Never")} 
+            lastSeen={formatFirebaseDate(member.startDate || member.createdAt || member.lastSeen, "---")} 
             initials={member.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
             avatar={member.avatar}
             email={member.email}

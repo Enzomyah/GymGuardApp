@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image, Dimensions, ActivityIndicator, Alert, Modal, TextInput, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,7 +6,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { db } from '@/firebaseConfig';
 import { doc, updateDoc, onSnapshot, Timestamp } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
-import { extendMembership, GymMember, deleteMember, parseFirebaseDate } from '@/services/firebase';
+import { extendMembership, GymMember, deleteMember, parseFirebaseDate, addMonths, formatDateToYMD, parseYMD } from '@/services/firebase';
 import { useTheme } from '@/context/ThemeContext';
 import { RegisterInput } from '@/components/RegisterInput';
 import { RenewModal } from '@/components/RenewModal';
@@ -42,9 +42,9 @@ export default function MemberProfileScreen() {
         setEditEmail(memberData.email || '');
         setEditAvatar(memberData.avatar || null);
         const expiryDate = parseFirebaseDate(memberData.expiryDate) || new Date();
-        setEditExpiry(expiryDate.toISOString().split('T')[0]);
+        setEditExpiry(formatDateToYMD(expiryDate));
         const startDate = parseFirebaseDate(memberData.startDate) || new Date();
-        setEditStartDate(startDate.toISOString().split('T')[0]);
+        setEditStartDate(formatDateToYMD(startDate));
       }
       setLoading(false);
     });
@@ -52,14 +52,13 @@ export default function MemberProfileScreen() {
     return () => unsubMember();
   }, [id]);
 
-  // Auto-calculate expiry date (30 days from start date) when start date changes
+    // Auto-calculate expiry date (1 month from start date) when start date changes
   useEffect(() => {
     if (editStartDate && isExpiryLocked) {
-      const start = new Date(editStartDate);
+      const start = parseYMD(editStartDate);
       if (!isNaN(start.getTime())) {
-        const expiry = new Date(start);
-        expiry.setDate(expiry.getDate() + 30);
-        setEditExpiry(expiry.toISOString().split('T')[0]);
+        const expiry = addMonths(start, 1);
+        setEditExpiry(formatDateToYMD(expiry));
       }
     }
   }, [editStartDate, isExpiryLocked]);
@@ -319,7 +318,7 @@ export default function MemberProfileScreen() {
                 {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
               </Text>
             </View>
-            <Text style={[styles.statusDot, { color: colors.border }]}>•</Text>
+            <Text style={[styles.statusDot, { color: colors.border }]}>â€¢</Text>
             <Text style={[styles.memberId, { color: colors.textSecondary }]}>ID: {member.memberId}</Text>
           </View>
 
@@ -479,7 +478,7 @@ export default function MemberProfileScreen() {
               </View>
               {isExpiryLocked ? (
                 <Text style={{ fontSize: 10, color: colors.textSecondary, marginTop: -15, marginLeft: 4 }}>
-                  Auto-calculated (30 days). Tap the lock to edit manually.
+                  Auto-calculated (1 month). Tap the lock to edit manually.
                 </Text>
               ) : (
                 <Text style={{ fontSize: 10, color: '#E63946', marginTop: -15, marginLeft: 4, fontWeight: '700' }}>

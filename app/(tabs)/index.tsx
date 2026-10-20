@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, RefreshControl, Linking } from 'react-native';
+﻿import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, RefreshControl, Linking, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -122,6 +122,12 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     fetchAllData();
+    const sub1 = DeviceEventEmitter.addListener('member_approved', fetchAllData);
+    const sub2 = DeviceEventEmitter.addListener('member_updated', fetchAllData);
+    return () => {
+      sub1.remove();
+      sub2.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -141,6 +147,8 @@ export default function DashboardScreen() {
     try {
       await extendMembership(memberToRenew.id, memberToRenew.expiryDate, months);
       Alert.alert("Success", `Membership renewed and extended by ${months} month${months > 1 ? 's' : ''}.`);
+      await fetchAllData();
+      DeviceEventEmitter.emit('member_updated');
     } catch (error) {
       Alert.alert("Error", "Failed to extend membership.");
     } finally {
@@ -162,6 +170,8 @@ export default function DashboardScreen() {
               if (!member.id) return;
               await deleteMember(member.id);
               Alert.alert("Success", "Member removed successfully.");
+              await fetchAllData();
+              DeviceEventEmitter.emit('member_updated');
             } catch (error) {
               Alert.alert("Error", "Failed to remove member.");
             }
@@ -187,10 +197,10 @@ export default function DashboardScreen() {
           text: "Open Email App", 
           onPress: async () => {
             const bccList = membersWithEmail.map(m => m.email).join(',');
-            const subject = encodeURIComponent("GymGuard: Membership Notice");
-            const body = encodeURIComponent("Hi everyone! This is a friendly reminder from GymGuard that your membership is either expiring in 2 days or has already expired. Please visit the gym counter to renew. Thank you!");
+            const subject = encodeURIComponent("Javenad Fitness Gym: Membership Notice");
+            const body = encodeURIComponent("Hi Ka-Javenad!\n\nThis is a friendly reminder from Javenad Fitness Gym that your membership is either expiring in 2 days or has already expired. Please visit the gym counter to renew.\n\nRemember: \"Don't stop hangga't hindi ka pa masarap!\" 💪🔥\n\nThank you and see you at the gym!");
             
-            const mailtoUrl = `mailto:?bcc=${bccList}&subject=${subject}&body=${body}`;
+            const mailtoUrl = "mailto:?bcc=" + bccList + "&subject=" + subject + "&body=" + body;
             
             try {
               const supported = await Linking.canOpenURL(mailtoUrl);
@@ -314,7 +324,7 @@ export default function DashboardScreen() {
                     contact={member.memberId} 
                     status={member.status as any} 
                     expires={member.expiryDate?.toDate ? member.expiryDate.toDate().toLocaleDateString() : "---"} 
-                    lastSeen={member.lastSeen?.toDate ? member.lastSeen.toDate().toLocaleDateString() : "Never"} 
+                    lastSeen={member.startDate?.toDate ? member.startDate.toDate().toLocaleDateString() : (member.createdAt?.toDate ? member.createdAt.toDate().toLocaleDateString() : (member.lastSeen?.toDate ? member.lastSeen.toDate().toLocaleDateString() : "---"))} 
                     initials={member.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                     avatar={member.avatar}
                     email={member.email}
